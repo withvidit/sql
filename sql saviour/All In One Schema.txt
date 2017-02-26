@@ -1,0 +1,1130 @@
+Write a query to display the average monthly ticket cost for each flight in ABC  Airlines. The query should display the Flight_Id,From_location,To_Location,Month Name as “Month_Name” and average price as “Average_Price”
+
+Display the records sorted in ascending order based on flight id and then by Month Name.
+
+SELECT f.flight_id,
+f.from_location,
+f.to_location,
+fp.Month_Name,
+fp.Average_Price
+FROM  air_flight f,
+(
+SELECT flight_id,
+MONTHNAME(flight_departure_date) AS Month_Name,
+AVG(price) as Average_Price
+FROM air_flight_details
+GROUP BY flight_id,
+MONTHNAME(flight_departure_date)
+) fp
+WHERE f.flight_id = fp.flight_id
+andf.airline_name = 'ABC AIRLINES'
+order by f.flight_id, fp.Month_Name;
+
+
+
+Write a query to display the customer(s) who has/have booked least number of tickets in ABC Airlines. The Query should display profile_id, customer’s first_name, Address and Number of tickets booked as “No_of_Tickets”
+
+Display the records sorted in ascending order based on customer's first name.
+SELECT cus.profile_id,
+cus.first_name,
+cus.address,
+mintkt.No_of_Tickets
+FROM  air_passenger_profilecus,
+           (SELECT MIN(s.Tot_No_of_Tickets) AS No_of_Tickets
+            FROM   (SELECT profile_id, 
+COUNT(ticket_id) AS Tot_No_of_Tickets
+                           FROM   air_ticket_info
+                           GROUP BY profile_id
+                          ) s
+           ) mintkt,
+( SELECTprofile_id,
+COUNT(ticket_id) AS Tot_No_of_Tickets
+FROM  air_ticket_info
+            GROUP BY profile_id
+          ) tottkt
+WHERE mintkt.No_of_Tickets = tottkt.Tot_No_of_Tickets
+AND      cus.profile_id = tottkt.profile_id
+order by cus.first_name;
+
+
+Write a query to display the number of flight services between locations in a month. The Query should display From_Location, To_Location, Month as “Month_Name” and number of flight services as “No_of_Services”.
+Hint: The Number of Services can be calculated from the number of scheduled departure dates of a flight.
+ The records should be displayed in ascending order based on From_Location and then by To_Location and then by month name.
+SELECT f.from_location,
+f.to_location,
+s.Month_Name,
+SUM(s.No_of_Services) AS No_of_Services
+FROM air_flight f JOIN
+(SELECT flight_id,
+MONTHNAME(flight_departure_date) AS Month_Name,
+COUNT(flight_departure_date) AS No_of_Services
+FROM  air_flight_details
+GROUP BY flight_id,
+MONTHNAME(flight_departure_date)
+) s
+ON s.flight_id  =f.flight_id
+GROUP BY f.from_location,
+f.to_Location,
+s.Month_Name
+order by f.from_location,
+f.to_Location, s.Month_Name;
+
+
+Write a query to display the customer(s) who has/have booked maximum number of tickets in ABC Airlines. The Query should display profile_id, customer’s first_name, Address and Number of tickets booked as “No_of_Tickets”
+ Display the records in ascending order based on customer's first name.
+SELECT cus.profile_id,
+cus.first_name,
+cus.address,
+maxtkt.No_of_Tickets as No_of_Tickets
+FROM  air_passenger_profilecus,
+           (SELECT MAX(s.Tot_No_of_Tickets) AS No_of_Tickets
+            FROM   (SELECT profile_id, 
+COUNT(ticket_id) AS Tot_No_of_Tickets
+                           FROM   air_ticket_info
+                           GROUP BY profile_id
+                          ) s
+           ) maxtkt,
+( SELECTprofile_id,
+COUNT(ticket_id) AS Tot_No_of_Tickets
+FROM  air_ticket_info
+            GROUP BY profile_id
+          ) tottkt
+WHERE maxtkt.No_of_Tickets = tottkt.Tot_No_of_Tickets
+AND      cus.profile_id = tottkt.profile_id
+order by cus.first_name;
+
+
+Write a query to display the number of tickets booked from Chennai to Hyderabad. The Query should display passenger profile_id,first_name,last_name, Flight_Id , Departure_Date and  number of tickets booked as “No_of_Tickets”.
+
+Display the records sorted in ascending order based on profile id and then by flight id and then by departure date.
+SELECT cus.profile_id,
+cus.first_name,
+cus.last_name,
+tkt.flight_id,
+tkt.flight_departure_date,
+tkt.No_of_Tickets
+FROM   air_passenger_profilecus JOIN
+(
+SELECT profile_id, FLIGHT_ID,FLIGHT_DEPARTURE_DATE,COUNT(ticket_id) AS No_of_Tickets
+FROM   air_ticket_info
+WHERE  flight_id IN (SELECT flight_id
+                        FROM   air_flight
+WHERE  from_location = 'Chennai'
+         AND    to_location = 'Hyderabad'
+     )
+GROUP BY profile_id,flight_id,flight_departure_date
+)tkt
+ON cus.profile_id = tkt.profile_id
+order by cus.profile_id, tkt.flight_id, tkt.flight_departure_date;
+
+
+
+Write a query to display flight id,from location, to location and ticket price of flights whose departure is in the month of april.
+Display the records sorted in ascending order based on flight id and then by from location.
+SELECT fd.flight_id,af.FROM_LOCATION,af.TO_LOCATION, fd.price FROM air_flight_detailsfd join air_flightaf on af.FLIGHT_ID=fd.FLIGHT_ID where substring(fd.flight_departure_date,6,2)='04' order by fd.flight_id, af.FROM_LOCATION;
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+Write a query to display the average cost of the tickets in each flight on all scheduled dates. The query should display flight_id, from_location, to_location and Average price as “Price”.
+
+Display the records sorted in ascending order based on flight id and then by from_location and then by to_location.
+SELECT f.flight_id,
+f.from_location,
+f.to_location,
+AVG(fd.Price) AS Price
+FROM  air_flight f JOIN
+air_flight_detailsfd
+ON      f.flight_id = fd.flight_id
+GROUP BY f.flight_id order by f.flight_id, f.from_location, f.to_location;
+
+
+
+
+
+
+
+
+
+
+
+
+Write a query to display the customers who have booked tickets from Chennai to Hyderabad. The query should display profile_id, customer_name (combine first_name&last_name with comma in b/w), address of the customer.
+
+Give an alias to the name as customer_name.
+ Hint: Query should fetch unique customers irrespective of multiple tickets booked.
+
+Display the records sorted in ascending order based on profile id.
+SELECT DISTINCT c.profile_id,
+CONCAT(c.first_name, ',',c.last_name) AS customer_name,
+c.address
+FROM  air_passenger_profile c
+JOIN    air_ticket_info t
+ON      c.profile_id = t.profile_id
+JOIN   air_flight f
+ON     f.flight_id = t.flight_id
+AND  f.from_location = 'Chennai'
+AND  f.to_location = 'Hyderabad'
+order by c.profile_id;
+
+
+
+
+
+
+
+
+Write a query to display profile id of the passenger(s) who has/have booked maximum number of tickets.
+In case of multiple records, display the records sorted in ascending order based on profile id.
+
+SELECT profile_id FROM air_ticket_info group by profile_id having count(profile_id)>=all(select count(profile_id) from air_ticket_info group by profile_id) order by profile_id;
+
+
+
+Write a query to display the total number of tickets as “No_of_Tickets” booked in each flight in ABC Airlines. The Query should display the flight_id, from_location, to_location and the number of tickets.
+Display only the flights in which atleast 1 ticket is booked.
+Display the records sorted in ascending order based on flight id.
+
+SELECT f.flight_id,
+f.from_location,
+f.to_location,
+COUNT(t.ticket_id) AS No_of_Tickets
+FROM air_ticket_infot JOIN
+air_flight f
+ON      f.flight_id = t.flight_id
+where AIRLINE_NAME = 'ABC AIRLINES'
+GROUP by f.flight_id
+ORDER by f.flight_id;
+
+
+
+Write a query to display the no of services offered by each flight and the total price of the services. The Query should display flight_id, number of services as “No_of_Services” and the cost as “Total_Price” in the same order.
+
+Order the result by Total Price in descending order and then by flight_id in descending order.
+
+Hint:The number of services can be calculated from the number of scheduled departure dates of the flight
+
+SELECT flight_id,
+COUNT(flight_departure_date) AS No_of_Services,
+SUM(price) AS Total_Price
+FROM  air_flight_details
+GROUP BY flight_id order by total_price DESC, flight_id DESC;
+
+
+
+Write a query to display the number of passengers who have travelled in each flight in each scheduled date. The Query should display flight_id, flight_departure_date and the number of passengers as “No_of_Passengers” in the same order.
+Display the records sorted in ascending order based on flight id and then by flight departure date.
+SELECT flight_id,
+flight_departure_date,
+COUNT(ticket_id) AS No_of_Passengers
+FROM   air_ticket_info
+GROUP BY flight_id,
+flight_departure_date
+ORDER BY flight_id, flight_departure_date;
+
+
+Write a query to display profile id of passenger(s) who booked minimum number of tickets.
+In case of multiple records, display the records sorted in ascending order based on profile id.
+
+SELECT profile_id FROM air_ticket_info group by profile_id having count(profile_id)<=all(select count(profile_id) from air_ticket_info group by profile_id) order by profile_id;
+
+
+
+Write a query to display unique passenger profile id,firstname,mobile number and email address of passengers who booked ticket to travel from HYDERABAD to CHENNAI.
+
+Display the records sorted in ascending order based on profile id.
+
+SELECT distinct ti.PROFILE_ID,pi.first_name,pi.mobile_number, pi.email_id FROM air_ticket_infoti join air_passenger_profile pi on pi.profile_id=ti.profile_id where flight_id in (SELECT FLIGHT_ID FROM air_flight where FROM_LOCATION ='HYDERABAD' and to_location ='CHENNAI') order by ti.profile_id
+
+
+
+Write a query to intimate the passengers who are boarding Chennai to Hyderabad Flight on 6th May 2013 stating the delay of 1hr in the departure time. The Query should display the passenger’s profile_id, first_name,last_name, flight_id, flight_departure_date,  actual departure time , actual arrival time , delayed departure time as "Delayed_Departure_Time", delayed arrival time as "Delayed_Arrival_Time" Hint: Distinct  Profile ID should be displayed irrespective of multiple tickets booked by the same profile.
+
+Display the records sorted in ascending order based on passenger's profile id.
+
+SELECT DISTINCT p.profile_id,
+p.first_name,
+p.last_name,
+t.flight_id,
+t.flight_departure_date,
+f.departure_time,
+f.arrival_time,
+ADDTIME(f.departure_time,'01:00:00') AS Delayed_Departure_Time,
+ADDTIME(f.arrival_time,'01:00:00') AS Delayed_Arrival_Time
+FROM air_passenger_profile p
+JOIN air_ticket_info t
+ON p.profile_id = t.profile_id
+AND t.flight_departure_date = '2013-05-06'
+JOIN air_flight f
+ON t.flight_id = f.flight_id
+AND f.from_location = 'Chennai'
+AND f.to_location = 'Hyderabad'
+order by p.profile_id;
+
+
+
+Write a query to display the number of tickets as “No_of_Tickets” booked by Kochi Customers. The Query should display the Profile_Id, First_Name, Base_Location and number of tickets booked.
+
+ Hint: Use String functions to get the base location of customer from their Address and give alias name as “Base_Location”
+
+ Display the records sorted in ascending order based on customer first name.
+
+SELECT cus.profile_id,
+cus.First_name,        
+SUBSTR(cus.address,INSTR(cus.address,',')+1,INSTR(cus.address,'-')- INSTR(cus.address,',')-1) 
+              AS Base_Location,
+s.No_of_Tickets
+FROM  air_passenger_profilecus JOIN
+(
+SELECT profile_id,
+COUNT(ticket_id) AS No_of_Tickets
+FROM  air_ticket_info
+GROUP BY profile_id
+)s
+ON s.profile_id = cus.profile_id
+AND  SUBSTR(cus.address,INSTR(cus.address,',')+1,INSTR(cus.address,'-')- INSTR(cus.address,',')-1) = 'Kochi' 
+order by first_name;
+
+
+
+Write a query to display the flight_id, from_location, to_location, number of Services as “No_of_Services” offered in the month of May.
+
+Hint:The number of services can be calculated from the number of scheduled departure dates of the flight
+
+ Display the records sorted in ascending order based on flight id.
+
+SELECT f.flight_id,
+f.from_location,
+f.to_location,
+s.No_of_Services
+FROM  air_flight f JOIN
+(
+SELECT flight_id,
+COUNT(flight_departure_date) AS No_of_Services
+FROM  air_flight_details
+WHERE MONTH(flight_departure_date) = 5
+GROUP BY flight_id
+) s
+ON f.flight_id = s.flight_id
+order by f.flight_id;
+
+
+
+Write a query to display profile id,lastname,mobile number and email id of passengers whose base location is chennai.
+
+Display the records sorted in ascending order based on profile id.
+
+SELECT PROFILE_ID,LAST_NAME,MOBILE_NUMBER,EMAIL_ID FROM air_passenger_profile where address like '%CHENNAI%' ORDER BY PROFILE_ID;
+
+
+
+Write a query to display number of flights between 6.00 AM and 6.00 PM from chennai. Hint Use FLIGHT_COUNT as alias name.
+
+SELECT count(flight_id) FLIGHT_COUNT FROM air_flight where FROM_LOCATION='CHENNAI' and departure_time between '06:00:00' and '18:00:00';
+
+
+
+Write a query to display unique profile id,first name , email id and contact number of passenger(s) who travelled on flight with id 3148. Display the records sorted in ascending order based on first name.
+
+SELECT distinct ti.PROFILE_ID,pi.first_name,pi.email_id,pi.mobile_number FROM air_ticket_infoti join air_passenger_profile pi on pi.profile_id=ti.profile_id where flight_id=3148 order by pi.first_name;
+
+
+
+
+
+
+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+Please follow instructions given below.
+
+
+Write a query to display account number, customer’s number, customer’s firstname,lastname,account opening date.
+
+Display the records sorted in ascending order based on account number.
+
+SELECT account_number,am.customer_number,firstname,lastname,account_opening_date
+FROM customer_master cm INNER JOIN account_master am
+ON cm.customer_number=am.customer_number
+ORDER BY account_number
+
+Please follow instructions given below.
+
+
+Write a query to display the number of customer’s from Delhi. Give the count an alias name of Cust_Count.
+
+SELECT count(customer_number) Cust_Count
+FROM customer_master
+WHERE customer_city='Delhi'
+
+Please follow instructions given below.
+
+
+Write a query to display  the customer number, customer firstname,account number for the customer’s whose accounts were created after 15th of any month.
+
+Display the records sorted in ascending order based on customer number and then by account number.
+
+SELECT  am.customer_number, firstname, account_number
+FROM customer_master cm INNER JOIN account_master am
+ON cm.customer_number=am.customer_number
+WHERE extract(day from account_opening_date)>15
+ORDER BY am.customer_number, account_number
+
+Please follow instructions given below.
+
+
+Write a query to display customer number, customer's first name, account number where the account status is terminated.
+
+Display the records sorted in ascending order based on customer number and then by account number.
+
+SELECT am.customer_number,firstname, account_number 
+FROM customer_master cm INNER JOIN account_master am
+ON cm.customer_number=am.customer_number
+WHERE account_status='Terminated'
+ORDER BY am.customer_number, account_number
+
+Please follow instructions given below.
+
+
+Write a query to display  the total number of  withdrawals and total number of deposits being done by customer whose customer number ends with 001. The query should display transaction type and the number of transactions. Give an alias name as Trans_Count for number of transactions. 
+Display the records sorted in ascending order based on transaction type.
+
+SELECT transaction_type,count(transaction_number) Trans_Count
+FROM account_master am INNER JOIN transaction_details td
+ON am.account_number=td.account_number
+WHERE customer_number like '%001'
+GROUP BY transaction_type
+ORDER BY transaction_type
+
+Please follow instructions given below.
+
+Write a query to display the number of customers who have registration but no account in the bank.
+Give the alias name as Count_Customer for number of customers.
+
+SELECT count(customer_number) Count_Customer
+FROM customer_master
+WHERE customer_number NOT IN (SELECT customer_number FROM account_master)
+
+Please follow instructions given below.
+
+
+Write a query to display account number and total amount deposited by each account holder ( Including the opening balance ). Give the total amount deposited an alias name of Deposit_Amount.  Display the records in sorted order based on account number.
+
+SELECT td.account_number, opening_balance+sum(transaction_amount) Deposit_Amount
+FROM account_master am INNER JOIN transaction_details td
+ON am.account_number=td.account_number
+WHERE transaction_type='deposit'
+GROUP BY  account_number
+ORDER BY account_number
+
+Please follow instructions given below.
+
+Write a query to display the number of accounts opened in each city .The Query should display Branch City  and number of accounts as No_of_Accounts.For the branch city where we don’t have any accounts opened display 0. Display the records in sorted order based on branch city.
+
+select 
+branch_master.branch_city, count(account_master.account_number) as No_of_Accounts from branch_master left join account_master on account_master.branch_id=branch_master.branch_id 
+group by branch_master.branch_city order by branch_city;
+
+Please follow instructions given below.
+
+Write  a query to display the firstname of the customers who have more than 1 account. Display the records in sorted order based on firstname.
+
+select firstname
+FROM customer_master cm INNER JOIN account_master am
+ON cm.customer_number=am.customer_number
+group by firstname
+having count(account_number)>1
+order by firstname;
+
+Please follow instructions given below.
+
+
+Write a query to display the customer number, customer firstname, customer lastname who has taken loan from more than 1 branch.
+
+Display the records sorted in order based on customer number.
+
+SELECT ld.customer_number, firstname, lastname
+FROM customer_master cm INNER JOIN loan_details ld
+ON cm.customer_number=ld.customer_number
+GROUP BY customer_number
+HAVING count(branch_id)>1
+ORDER BY customer_number
+
+Please follow instructions given below.
+
+Write a query to display the customer’s number, customer’s firstname, customer’s city and branch city where the city of the customer and city of the branch is different. 
+
+Display the records sorted in ascending order based on customer number.
+
+select customer_master.customer_number, firstname, customer_city, branch_city
+from account_master inner join customer_master on account_master.customer_number = customer_master.customer_number
+inner join branch_master on account_master.branch_id = branch_master.branch_id
+where customer_city != branch_city  order by customer_master.customer_number;
+
+Please follow instructions given below.
+
+
+Write a query to display the number of clients who have asked for loans but they don’t have any account in the bank though they are registered customers. Give the count an alias name of Count.
+
+SELECT count(ld.customer_number) Count
+FROM customer_master cm INNER JOIN loan_details ld
+ON  cm.customer_number=ld.customer_number
+WHERE cm.customer_number NOT IN ( SELECT customer_number FROM account_master)
+
+Please follow instructions given below.
+
+
+Write a query to display the  account number who has done the highest transaction.
+
+For example the account A00023 has done 5 transactions i.e. suppose 3 withdrawal and 2 deposits. Whereas the account A00024 has done 3 transactions i.e. suppose 2 withdrawals and 1 deposit. So account number of A00023 should be displayed.
+
+In case of multiple records, display the records sorted in ascending order based on account number.
+
+SELECT td.account_number 
+FROM account_master am INNER JOIN transaction_details td
+ON am.account_number=td.account_number
+group by td.account_number
+having count(td.transaction_number)>=ALL
+(SELECT count(td.transaction_number) 
+FROM account_master am INNER JOIN transaction_details td
+ON am.account_number=td.account_number
+group by td.account_number) order by am.account_number;
+
+Please follow instructions given below.
+
+Write a query to show the branch name,branch city where we have the maximum customers.
+For example the branch B00019 has 3 customers, B00020 has 7 and B00021 has 10. So branch id B00021 is having maximum customers. If B00021 is Koramangla branch Bangalore, Koramangla branch should be displayed along with city name Bangalore.
+
+In case of multiple records, display the records sorted in ascending order based on branch name.
+
+select branch_name,branch_city
+FROM branch_master INNER JOIN account_master 
+ON branch_master.branch_id=account_master.branch_id
+group by branch_name
+having count(customer_number)>=ALL
+(select count(customer_number)
+FROM branch_master INNER JOIN account_master 
+ON branch_master.branch_id=account_master.branch_id
+group by branch_name) order by branch_name;
+
+Please follow instructions given below.
+
+Write a query to display all those account number, deposit, withdrawal where withdrawal is more than deposit amount. Hint: Deposit should include opening balance as well.
+For example A00011 account opened with Opening Balance 1000 and  A00011 deposited 2000 rupees on 2012-12-01 and 3000 rupees on 2012-12-02. The same account i.e A00011 withdrawn 3000 rupees on 2013-01-01 and 7000 rupees on 2013-01-03. So the total deposited amount is 6000 and total withdrawal amount is 10000. So withdrawal amount is more than deposited amount for account number A00011.
+
+Display the records sorted in ascending order based on account number.
+
+SELECT td.account_number,sum(CASE WHEN  transaction_type='Deposit' THEN transaction_amount END)
++(SELECT opening_balance FROM account_master am2 where am2.account_number=am.account_number) Deposit,
+sum(CASE WHEN transaction_type='Withdrawal' THEN transaction_amount END) Withdrawal
+FROM account_master am INNER JOIN transaction_details td
+ON am.account_number=td.account_number
+GROUP BY td.account_number
+HAVING Withdrawal > Deposit
+ORDER BY am.account_number
+
+Please follow instructions given below.
+
+
+Write a query to show the balance amount  for account number that ends with 001. 
+Note: Balance amount includes account opening balance also. Give alias name as Balance_Amount.
+
+For example A00015 is having an opening balance of 1000. A00015 has deposited 2000 on 2012-06-12 and deposited 3000 on 2012-07-13. The same account has drawn money of 500 on 2012-08-12 , 500 on 2012-09-15, 1000 on 2012-12-17. So balance amount is 4000 i.e (1000 (opening balance)+2000+3000 ) – (500+500+1000).
+
+SELECT  (SUM(CASE WHEN transaction_type='Deposit' 
+THEN transaction_amount END)) -
+(SUM(CASE WHEN transaction_type='Withdrawal' 
+THEN transaction_amount END))+(select opening_balance 
+from account_master where account_number like '%001')  AS Balance_Amount
+FROM transaction_details where account_number like '%001'
+
+Please follow instructions given below.
+
+Display the customer number, customer's first name, account number and number of transactions  being made by the customers from each account. Give the alias name for number of transactions as Count_Trans. Display the records sorted in ascending order based on customer number and then by account number.
+
+SELECT cm. customer_number,firstname, am.account_number,count(transaction_number) Count_Trans
+FROM customer_master cm inner JOIN account_master am
+ON cm.customer_number=am.customer_number
+INNER JOIN transaction_details td
+ON  am.account_number=td.account_number
+group by am.account_number order by cm.customer_number, am.account_number
+
+Please follow instructions given below.
+
+Write a query to display the customer’s firstname who have multiple accounts (atleast  2 accounts).  Display the records sorted in ascending order based on customer's firstname.
+
+SELECT firstname
+FROM customer_master INNER JOIN account_master
+ON customer_master.customer_number=account_master.customer_number
+GROUP BY firstname
+having count(account_number)>=2 order by firstname;
+
+Please follow instructions given below.
+
+
+Write a query to display the customer number, firstname, lastname for those client where total loan amount taken is maximum and at least taken from 2 branches. 
+
+For example the customer C00012 took a loan of 100000 from bank branch with id B00009 and C00012
+Took a loan of 500000 from bank branch with id B00010. So total loan amount for customer C00012 is 
+600000. C00013 took a loan of 100000 from bank branch B00009 and 200000 from bank branch B00011.
+So total loan taken is 300000. So loan taken by C00012 is more then C00013.
+
+SELECT ld.customer_number, firstname, lastname
+FROM customer_master cm INNER JOIN loan_details ld
+ON cm.customer_number=ld.customer_number
+group by customer_number
+having count(branch_id)>=2 and sum(loan_amount)>=All(select sum(loan_amount) from loan_details group by customer_number)
+
+Please follow instructions given below.
+
+
+Write a query to display the customer’s number, customer’s firstname, branch id and loan amount for people who have taken loans..
+
+Display the records sorted in ascending order based on customer number and then by branch id and then by loan amount.
+
+SELECT ld.customer_number, firstname,branch_id, loan_amount
+FROM customer_master  cm INNER JOIN loan_details ld
+ON cm.customer_number=ld.customer_number order by cm.customer_number, branch_id, loan_amount
+
+Please follow instructions given below.
+
+
+Write a query to display city name and count of branches in that city. Give the count of branches an alias name of Count_Branch.
+Display the records sorted in ascending order based on city name.
+
+SELECT branch_city, count(branch_id) Count_Branch
+FROM branch_master
+GROUP BY branch_city
+ORDER BY branch_city
+
+Please follow instructions given below.
+
+
+Write a query to display account id, customer’s firstname, customer’s lastname for the customer’s whose account is Active.
+Display the records sorted in ascending order based on account id /account number.
+
+SELECT account_number, firstname, lastname 
+FROM customer_master cm INNER JOIN account_master am
+ON cm.customer_number=am.customer_number 
+WHERE account_status='Active'
+ORDER BY account_number
+
+Please follow instructions given below.
+
+
+Write a query to display customer’s number, first name and middle name. For the customers who don’t have middle name,  display their last name as middle name. Give the alias name as Middle_Name.  
+Display the records sorted in ascending order based on customer number.
+
+SELECT customer_number,firstname,coalesce(middlename,lastname) Middle_Name
+FROM customer_master order by customer_number
+
+Please follow instructions given below.
+
+Write a query to display the customer number , firstname, customer’s date of birth . Display the records sorted in ascending order of date of birth year and within that sort by firstname in ascending order.
+
+SELECT customer_number,firstname,customer_date_of_birth
+FROM  customer_master order by year(customer_date_of_birth), firstname;
+
+Please follow instructions given below.
+
+Write a query to display the customers firstname, city and account number whose occupation are not into Business, Service or Student.
+Display the records sorted in ascending order based on customer first name and then by account number.
+
+SELECT firstname, customer_city,account_number
+FROM customer_master  cm INNER JOIN account_master am
+ON cm.customer_number=am.customer_number
+WHERE occupation !='Service' and occupation != 'Student' and occupation != 'Business'  order by firstname, account_number
+
+
+-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+
+Please follow instructions given below.
+<br>
+Write a query to display category and number of items in that category. Give the count an alias name of Count_category. Display the details on the sorted order of count in descending order.
+
+SELECT  item_category , count(item_id) Count_category
+FROM item_master
+GROUP BY item_category order by count_category DESC
+
+Please follow instructions given below.
+<br>
+Write a query to display the number of employees in HR department. Give the alias name as No_of_Employees.
+
+SELECT count(employee_id) AS No_of_Employees
+FROM employee_master
+WHERE department= 'HR'
+
+Please follow instructions given below.
+<br><br>
+Write a query to display employee id, employee name, designation and department for employees who have never been issued an item as a loan from the company. Display the records sorted in ascending order based on employee id.
+
+SELECT employee_id, employee_name, designation, department
+FROM employee_master WHERE employee_id
+NOT IN ( SELECTemployee_id FROM employee_issue_details)
+order by employee_id;
+
+Please follow instructions given below.
+<br><br>
+Write a query to display the employee id, employee name who was issued an item of highest valuation.
+<br> In case of multiple records, display the records sorted in ascending order based on employee id.
+
+[Hint Suppose an item called dinning table is of 22000 and that is the highest price of the item that has been issued. So display the employee id and employee name who issued dinning table whose price is 22000.]
+
+SELECT eid.employee_id, employee_name
+FROM employee_masterem INNER JOIN employee_issue_detailseid
+ON em.employee_id=eid.employee_id
+INNER JOIN item_masterim
+ON eid.item_id=im.item_id
+WHERE item_valuation=(SELECT max(item_valuation)
+FROM employee_issue_detailseid INNER JOIN item_masterim
+ON eid.item_id=im.item_id) order by eid.employee_id;
+
+Please follow instructions given below.
+<br>
+Write a query to display issue_id, employee_id, employee_name.
+Display the records sorted in ascending order based on issue id.
+
+SELECT issue_id, eid.employee_id, employee_name
+FROM employee_masterem INNER JOIN  employee_issue_detailseid
+ON em.employee_id=eid.employee_id order by issue_id;
+
+Please follow instructions given below.
+<br>
+Write a query to display employee id, employee name who don’t have loan cards.
+Display the records sorted in ascending order based on employee id.
+
+SELECT employee_id, employee_name
+FROM employee_master
+WHERE employee_id NOT IN ( SELECTemployee_id FROM employee_card_details )
+order by employee_id;
+
+Please follow instructions given below.
+<br>
+Write a query to count the number of cards issued to an employee “Ram”.  Give the count an alias name as No_of_Cards.
+
+SELECT count(loan_id)  AS No_of_Cards
+FROM  employee_card_details c 
+JOIN  employee_master e
+ON    c.employee_id = e.employee_id
+WHERE e.employee_name= 'Ram'
+GROUP BY c.employee_id
+
+Please follow instructions given below.
+<br>
+Write a query to display the count of customers who have gone for loan type stationary. Give the count an alias name as Count_stationary.
+
+SELECT count(employee_id)  Count_stationary
+FROM  employee_card_detailsecd INNER JOIN  loan_card_masterlcd
+ON ecd.loan_id=lcd.loan_id
+WHERE  loan_type='stationary'
+
+Please follow instructions given below.
+<br>
+Write a query to display the employee id, employee name   and number of items issued to them. Give the number of items an alias name as Count. Display the details in descending order of count and then by employee id in ascending order. Consider only employees who have been issued atleast 1 item.
+
+SELECT eid.employee_id, employee_name, count(item_id) Count
+FROM  employee_masterem INNER JOIN employee_issue_detailseid
+ON em.employee_id=eid.employee_id
+GROUP BY employee_id order by count DESC, eid.employee_id;
+
+Please follow instructions given below.
+<br>
+Write a query to display the employee id, employee name who was issued an item of minimum valuation.
+<br>
+In case of multiple records, display them sorted in ascending order based on employee id.
+
+[Hint Suppose an item called pen is of rupees 20 and that is the lowest price. So display the employee id and employee name who issued pen where the valuation is 20.]
+
+SELECT eid.employee_id, employee_name
+FROM employee_masterem INNER JOIN employee_issue_detailseid
+ON em.employee_id=eid.employee_id
+INNER JOIN item_masterim
+ON eid.item_id=im.item_id
+WHERE item_valuation=(SELECT min(item_valuation)
+FROM employee_issue_detailseid INNER JOIN item_masterim
+ON eid.item_id=im.item_id)
+order by eid.employee_id;
+
+Please follow instructions given below.
+<br>
+Write a query to display the employee id, employee name and total valuation of the product issued to each employee.  Give the alias name as TOTAL_VALUATION.
+<br>
+Display the records sorted in ascending order based on employee id.
+<br>
+Consider only employees who have been issued atleast 1 item.
+
+SELECT em.employee_id, employee_name, sum(item_valuation) TOTAL_VALUATION
+FROM employee_masteremINNER  JOINemployee_issue_detailseid
+ON em.employee_id=eid.employee_id
+INNER JOIN item_masterim
+ON eid.item_id=im.item_id
+GROUP BY eid.employee_id
+ORDER BY eid.employee_id;
+
+Please follow instructions given below.
+<br>
+Write a query to display distinct employee id, employee name who kept the item issued for more than a year. Hint: Use Date time function to calculate the difference between item issue and return date. Display the records only if it is more than 365 Days.
+<br>
+Display the records sorted in ascending order based on employee id.
+
+SELECT DISTINCT eid.employee_id,employee_name
+FROM  employee_issue_detailseid JOIN employee_masterem
+ON eid.employee_id=em.employee_id
+WHERE datediff(return_date,issue_date) >  365
+order by eid.employee_id;
+
+Please follow instructions given below.
+<br>
+Write a query to display employee id, employee name and count of items of those who asked for more than 1 furniture. Give the alias name for count of items as COUNT_ITEMS.
+<br>
+Display the records sorted in ascending order on employee id.
+
+SELECT eid.employee_id, employee_name, count(eid.item_id) COUNT_ITEMS
+FROM employee_issue_detailseid JOIN item_masterim
+ON eid.item_id=im.item_id
+JOIN employee_masterem
+ON eid.employee_id=em.employee_id
+WHERE item_category='furniture'
+GROUP BY employee_id
+HAVING COUNT_ITEMS>1
+order by eid.employee_id;
+
+Please follow instructions given below.
+<br>
+
+Write a query to display the number of men & women Employees. The query should display the gender and number of Employees as No_of_Employees. Display the records sorted in ascending order based on gender.
+
+SELECT gender , count(gender) No_of_Employees
+FROM employee_master
+GROUP BY gender ORDER BY gender
+
+Please follow instructions given below.
+<br>
+
+Write a query to display employee id, employee name who joined the company after 2005. Display the records sorted in ascending order based on employee id.
+
+SELECT employee_id, employee_name
+FROM employee_master
+WHERE extract(year from date_of_joining)>2005
+order by employee_id;
+
+Please follow instructions given below.
+<br>
+
+Write a query to get the number of items of the furniture category issued and not issued. The query should display issue status and the number of furniture as No_of_Furnitures.
+Display the records sorted in ascending order based on issue_status.
+
+SELECT  issue_status, count(item_id) No_of_Furnitures
+FROM item_master
+WHERE  item_category='Furniture'
+GROUP BY issue_status
+ORDER BY issue_status
+
+Please follow instructions given below.
+<br>
+
+Write a query to find the number of items in each category, make and description. The Query should display Item Category, Make, description and the number of items as No_of_Items. Display the records in ascending order based on Item Category, then by item make and then by item description.
+
+SELECT item_category, item_make,item_description, count(item_description) No_of_Items FROM item_master
+GROUP BY item_category, item_make, item_description ORDER BY item_category, item_make,item_description;
+
+Please follow instructions given below.
+<br>
+
+Write a query to display employee id, employee name, item id and item description of employees who were issued item(s) in the month of January 2013. Display the records sorted in order based on employee id and then by item id in ascending order.
+
+SELECT  eid.employee_id, employee_name, eid.item_id, item_description
+FROM employee_issue_detailseid JOIN employee_masterem
+ON eid.employee_id=em.employee_id
+JOIN item_masterim
+ON eid.item_id=im.item_id
+WHERE extract(month from issue_date)=1 and extract(year from issue_date)=2013
+ORDER BY eid.employee_id, eid.item_id;
+
+Please follow instructions given below.
+<br>
+
+Write a query to display the employee id, employee name and count of item category of the employees who have been issued items in at least 2 different categories.
+Give the alias name for category count as COUNT_CATEGORY.
+Display the records sorted in ascending order based on employee id.
+
+SELECT em.employee_id,employee_name, count(distinct item_category) COUNT_CATEGORY
+ FROM employee_issue_detailseid JOIN item_masterim
+ON eid.item_id=im.item_id
+JOIN employee_masterem
+ON eid.employee_id=em.employee_id
+GROUP BY employee_id
+HAVING COUNT_CATEGORY>=2
+ORDER BY employee_id;
+
+Please follow instructions given below.
+<br>
+Write a query to display the item id , item description which was never issued to any employee. Display the records sorted in ascending order based on item id.
+
+SELECT item_id, item_description
+FROM item_master
+WHERE item_id
+NOT IN ( SELECTitem_id from employee_issue_details)
+ORDER BY item_id;
+
+Please follow instructions given below.
+<br>
+
+Write a query to display the employee id, employee name and&nbsp;&nbsp;totalvaluation&nbsp;for the employees who has issued minimum total valuation of the product.  Give the alias name for total valuation as TOTAL_VALUATION.
+
+[Hint: Suppose an employee E00019 issued item of price 5000, 10000, 12000 and E00020 issue item of price 2000, 7000 and 1000. So the valuation of items taken by E00019 is 27000 and for E00020 it is 10000. So the employee id, employee name of E00020 should be displayed. ]
+
+select employee_issue_details.employee_id,employee_master.employee_name,sum(item_master.item_valuation)as TOTAL_VALUATION from 
+employee_issue_details inner join item_master
+onitem_master.item_id = employee_issue_details.item_id
+inner join employee_master
+onemployee_master.employee_id=employee_issue_details.employee_id
+group by employee_issue_details.employee_id
+order by TOTAL_VALUATION asc limit 1;
+
+Please follow instructions given below.
+
+Write a query to display the employee id, employee name, card issue date and card valid date.
+Order by employee name and then by card valid date. Give the alias name to display the card valid date as CARD_VALID_DATE.
+
+[Hint:  Validity in years for the loan card is given in loan_card_master table. Validity date is calculated by adding number of years in the loan card issue date. If the duration of year is zero then display AS 'No Validity Date'. ]
+
+SELECT ecd.employee_id,employee_name,
+card_issue_date, CASE duration_in_years
+WHEN 0 THEN 'No Validity Date'
+ELSE DATE_ADD(card_issue_date, INTERVAL duration_in_years YEAR)
+END CARD_VALID_DATE
+FROM employee_masterem INNER JOIN
+employee_card_detailsecd
+ON em.employee_id=ecd.employee_id
+INNER JOIN loan_card_masterlcd
+ON ecd.loan_id=lcd.loan_id
+order by employee_name,  CARD_VALID_DATE;
+
+Please follow instructions given below.
+
+
+Write a query to display the employee id, employee name who have not issued with any item  in the year 2013. Hint: Exclude those employees who was never issued with any of the items in all the years. Display the records sorted in ascending order based on employee id.
+
+SELECT DISTINCT a.employee_id,b.employee_name FROM employee_issue_details a JOIN
+employee_master b ON a.employee_id=b.employee_id WHERE a.employee_id NOT IN(SELECT employee_id
+FROM employee_issue_details WHERE (EXTRACT(YEAR FROM issue_date)=2013))
+ORDER BY a.employee_id;
+
+Please follow instructions given below.
+
+
+Write a query to display issue id, employee id, employee name, item id, item description and issue date.  Display the data in descending order of date and then by issue id in ascending order.
+
+SELECT issue_id, eid.employee_id, employee_name, im.item_id, item_description,issue_date
+FROM employee_issue_detailseid INNER JOIN employee_masterem
+ON eid.employee_id=em.employee_id
+INNER JOIN item_masterim
+ON eid.item_id=im.item_id
+ORDER BY issue_datedesc, issue_idasc;
+
+Please follow instructions given below.
+<br>
+
+Write a query to display the employee id, employee name and total valuation for employee who has issued maximum total valuation of the product.&nbsp; Give the alias name for total valuation as TOTAL_VALUATION.&nbsp;
+<br>[Hint: Suppose an employee E00019 issued item of price 5000, 10000, 12000 and E00020 issue item of price 2000, 7000, and 1000. So the valuation of items taken by E00019 is 27000 and for E00020 it is 10000. So the employee id, employee name and total valuation of E00019 should display. ]
+
+select employee_issue_details.employee_id,employee_master.employee_name,sum(item_master.item_valuation)as TOTAL_VALUATION from 
+employee_issue_details inner join item_master
+onitem_master.item_id = employee_issue_details.item_id
+inner join employee_master
+onemployee_master.employee_id=employee_issue_details.employee_id
+group by employee_issue_details.employee_id
+order by TOTAL_VALUATION desc limit 1;
+
+
+--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
+Please follow instructions given below.
+
+Write a query to display movie names and number of times that movie is issued to customers. Incase movies are never issued to customers display number of times as 0. 
+
+Display the details in sorted order based on number of times (in descending order)  and then by movie name (in ascending order). 
+
+The Alias name for the number of movies issued is ISSUE_COUNT.
+
+
+SELECT movie_name, count(cid.movie_id)  ISSUE_COUNT FROM movies_master mm LEFT JOIN customer_issue_details cid ON mm.movie_id=cid.movie_id GROUP BY movie_name ORDER BY Issue_count DESC, movie_name;
+
+Please follow instructions given below.
+
+
+ Write a query to display id,name,age,contact no of customers whose age is greater than 25 and and who have registered in the year 2012.   Display contact no in the below format +91-XXX-XXX-XXXX example +91-987-678-3434 and use the alias name as "CONTACT_ISD". If the contact no is null then display as 'N/A'  Sort all the records in ascending order based on age and then by name.
+
+select customer_id,customer_name, age, coalesce(concat('+91-',substring(contact_no,1,3),'-',substring(contact_no,4,3),'-',substring(contact_no,7)),'N/A') CONTACT_ISD from customer_master where age>25 and substring(date_of_registration,1,4)=2012 order by age asc, customer_name;
+
+Please follow instructions given below.
+<br>
+
+Write a query to display the movie category and number of movies in that category. Display records based on number of movies from higher to lower order  and then by movie category in ascending order.
+<br/>Hint: Use NO_OF_MOVIES as alias name for number of movies.
+
+SELECT movie_category,  count(movie_id)   NO_OF_MOVIES FROM movies_master GROUP BY movie_category order by no_of_movies desc, movie_category asc;
+
+Please follow instructions given below.
+<br>
+
+Write a query to display the number of customers having card with description “Gold card”. <br/>Hint: Use CUSTOMER_COUNT as alias name for number of customers
+
+SELECT count(customer_id) CUSTOMER_COUNT FROM library_card_master lcm INNER JOIN customer_card_details ccd ON lcm.card_id=ccd.card_id WHERE description='Gold Card';
+
+Please follow instructions given below.
+<br>
+Write a query to display the customer id, customer name, year of registration,library card id, card issue date of all the customers who hold library card. Display the records sorted by customer name in descending order.
+<br> Use REGISTERED_YEAR as alias name for year of registration.
+
+SELECT c.customer_id, c.customer_name, extract(year from c.date_of_registration)  REGISTERED_YEAR,cd.card_id,cd.issue_date FROM customer_master c join customer_card_details cd on c.customer_id=cd.customer_id ORDER BY  c.customer_name   DESC;
+
+Please follow instructions given below.
+<br>
+
+Write a query to display issue id, customer id, customer name for the customers who have paid fine and whose name starts with 'R'. Fine is calculated based on return date and actual date of return. If the date of actual return is after date of return then fine need to be paid by the customer.
+<br>
+Display the records sorted in ascending order based on customer name.
+
+SELECT  issue_id ,cid.customer_id, customer_name FROM customer_issue_details cid INNER JOIN customer_master cm ON cid.customer_id=cm.customer_id WHERE actual_date_of_return>return_date and customer_name like 'R%' order by customer_name;
+
+Please follow instructions given below.
+
+
+Write a query to display customer id, customer name, card id, card description and card amount in dollars of customers who have taken movie on the same day the library card is registered.
+
+For Example Assume John registered a library card on 12th Jan 2013 and he took a movie on 12th Jan 2013 then display his details.
+ AMOUNT_DOLLAR = amount/52.42 and round it to zero decimal places and display as $Amount. Example Assume 500 is the amount then dollar value will be $10.
+Hint: Use AMOUNT_DOLLAR as alias name for amount in dollar.
+Display the records in ascending order based on customer name.
+
+SELECT ccd.customer_id, customer_name, ccd.card_id, description,concat('$',round(amount/52.42,0)) AMOUNT_DOLLAR FROM customer_master cm INNER JOIN customer_card_details ccd ON cm.customer_id=ccd.customer_id INNER JOIN library_card_master lcm ON ccd.card_id=lcm.card_id  INNER JOIN customer_issue_details cid ON cid.customer_id = cm.customer_id WHERE cm.date_of_registration=cid.issue_date order by customer_name;
+
+Please follow instructions given below.
+
+
+Write a query to display the customer id, customer name,contact number and address of customers who have taken movies from library without library card and whose address ends with 'Nagar'.
+Display customer name in upper case. Hint: Use CUSTOMER_NAME as alias name for customer name. Display the details sorted in ascending order based on customer name.
+
+SELECT customer_id , upper(customer_name) CUSTOMER_NAME,contact_no,contact_address FROM customer_master WHERE customer_id NOT IN ( select customer_id from customer_card_details ) AND customer_id IN ( SELECT customer_id from customer_issue_details ) and contact_address like '%Nagar' order by customer_name ;
+
+Please follow instructions given below.
+
+Write a query to display the movie id, movie name,release year,director name of movies acted by the leadactor1 who acted maximum number of movies .Display the records sorted in ascending order based on movie name.
+
+select movie_id,movie_name,release_year,director_name from movies_master where lead_actor_name1 in(select lead_actor_name1 from (select lead_actor_name1,count(movie_id)ct from movies_master group by lead_actor_name1)t where t.ct>=all(select count(movie_id) from movies_master group by lead_actor_name1)) order by movie_name;
+
+Please follow instructions given below.
+<br>
+Write a query to display the customer name and number of movies issued to that customer sorted by customer name in ascending order.  If a customer has not  been issued with any movie then display 0. <br>Hint: Use MOVIE_COUNT as alias name for number of movies issued.
+
+SELECT customer_name, count(movie_id) MOVIE_COUNT FROM customer_master cm LEFT OUTER JOIN customer_issue_details cid ON cm.customer_id=cid.customer_id GROUP BY customer_name ORDER BY customer_name;
+
+Please follow instructions given below.
+<br>
+Write a query to display serial number,issue id, customer id, customer name, movie id and movie name of all the videos that are issued and display in ascending order based on serial number.
+<br/>Serial number can be generated from the issue id , that is last two characters of issue id is the serial number.
+<br/>For Example Assume the issue id is I00005 then the serial number is 05
+<br/>Hint: Alias name for serial number is 'SERIAL_NO'<br/><br/><br>
+
+SELECT substring(issue_id,5,2) SERIAL_NO,issue_id, cid.customer_id,customer_name, mm.movie_id, movie_name FROM customer_issue_details cid  INNER JOIN customer_master cm ON cid.customer_id=cm.customer_id INNER JOIN movies_master mm ON cid.movie_id=mm.movie_id order by SERIAL_NO ASC;
+
+Please follow instructions given below.
+<br>
+Write a query to display the issue id,issue date, customer id, customer name and contact number for videos that are issued in the year 2013.Display the records in decending order based on issue date of the video.
+
+SELECT  issue_id,  issue_date, cid.customer_id, customer_name,contact_no FROM customer_issue_details cid  INNER JOIN customer_master cm ON cid.customer_id=cm.customer_id where extract(year from issue_date)=2013  order by issue_date DESC
+
+Please follow instructions given below.
+<br>
+Write a query to display movie id ,movie name and actor names of movies which are not issued to any customers.  <br> Actors Name to be displayed in the below format.LEAD_ACTOR_ONE space ambersant space LEAD_ACTOR_TWO.
+Example: Assume lead actor one's name is "Jack Tomson" and Lead actor two's name is "Maria" then Actors name will be "Jack Tomsom & Maria"Hint:Use ACTORS as alias name for actors name. <br> Display the records in ascending order based on movie name.
+
+SELECT movie_id, movie_name,concat(lead_actor_name1,' & ',lead_actor_name2) ACTORS FROM movies_master WHERE movie_id NOT IN ( SELECT movie_id   from customer_issue_details ) order by movie_name asc;
+
+
+Please follow instructions given below.
+Write a query to display the director's name, movie name and lead_actor_name1 of all the movies directed by the director who directed more than one movie. Display the directors name in capital letters. Use DIRECTOR_NAME as alias name for director name column Display the records sorted in ascending order based on director_name and then by movie_name in descending order. 
+SELECT upper(director_name) DIRECTOR_NAME,movie_name,lead_actor_name1 FROM movies_master WHERE director_name in (SELECT director_name FROM movies_master GROUP BY director_name HAVING count(movie_id)>1) order by director_name, movie_name desc;
+
+Please follow instructions given below.
+<br>
+Write a query to display number of customers who have registered in the library in the year 2012 and who have given/provided contact number. <br> Hint:Use NO_OF_CUSTOMERS as alias name for number of customers.
+
+SELECT count(customer_id)  NO_OF_CUSTOMERS FROM  customer_master WHERE extract(year from date_of_registration)=2012 and contact_no is not null
+
+Please follow instructions given below.
+<br>
+Write a query to display the customer's name, contact number,library card id and library card description of all the customers irrespective of customers holding a library card. If customer contact number is not available then display his address. Display the records sorted in ascending order based on customer name.  Hint: Use CONTACT_DETAILS as alias name for customer contact.
+
+SELECT c.customer_name,coalesce(c.contact_no,c.contact_address) CONTACT_DETAILS,cd.card_id,cd.description FROM customer_master c left join customer_card_details ccd on ccd.customer_id=c.customer_id left join library_card_master cd on cd.card_id=ccd.card_id order by customer_name;
+
+Please follow instructions given below.
+
+
+ Write a query to display the customer id, customer name and number of times the same movie is issued to the same customers who have taken same movie more than once. Display the records sorted by customer name in decending order  For Example: Assume customer John has taken Titanic three times and customer Ram has taken Die hard only once then display the details of john.  Hint: Use NO_OF_TIMES as alias name for number of times
+
+SELECT cid.customer_id, customer_name,count(movie_id) NO_OF_TIMES FROM customer_master cm INNER JOIN  customer_issue_details cid ON cm.customer_id=cid.customer_id group by customer_id, customer_name,movie_id having count(movie_id)>1 order by customer_name desc;
+
+Please follow instructions given below.
+
+Write a query to display customer id, customer name,contact number, movie category and number of movies issued to each customer based on movie category who has been issued with more than one movie in that category. Example: Display contact number as "+91-876-456-2345" format.&nbsp; <br>Hint:Use NO_OF_MOVIES as alias name for number of movies column.
+ <br>Hint:Use CONTACT_ISD as alias name for contact number.
+<br> Display the records sorted in ascending order based on customer name and then by movie category.
+
+SELECT cid.customer_id,customer_name,concat('+91-',substring(contact_no,1,3),'-',substring(contact_no,4,3),'-',substring(contact_no,7)) CONTACT_ISD,movie_category,count(movie_category) NO_OF_MOVIES FROM customer_issue_details  cid INNER JOIN movies_master mm ON cid.movie_id=mm.movie_id INNER JOIN customer_master cm ON cm.customer_id=cid.customer_id group by customer_id,customer_name,CONTACT_ISD,movie_category having count(movie_category)>1 order by customer_name, movie_category;
+
+Please follow instructions given below.
+
+
+Write a query to display customer id and customer name of customers who has been issued with maximum number of movies and customer who has been issued with minimum no of movies. 
+ For example Assume customer John has been issued 5 movies, Ram has been issued 10 movies and Kumar has been issued 2 movies. The name and id of Ram should be displayed for issuing maximum movies and Kumar should be displayed for issuing minimum movies. Consider only the customers who have been issued with atleast 1 movie Customer(s) who has/have been issued the maximum number of movies must be displayed first followed by the customer(s) who has/have been issued with the minimum number of movies. 
+In case of multiple customers who have been displayed with the maximum or minimum number of movies, display the records sorted in ascending order based on customer name.
+
+(select cid.customer_id , customer_name FROM  customer_master cm INNER JOIN customer_issue_details cid
+ON cm.customer_id=cid.customer_id
+group by customer_id , customer_name
+having count(movie_id)>=ALL(select  count(movie_id)
+FROM customer_issue_details
+group by customer_id) order by customer_name)
+UNION ALL
+(select cid.customer_id , customer_name FROM  customer_master cm INNER JOIN customer_issue_details cid
+ON cm.customer_id=cid.customer_id
+group by customer_id , customer_name
+having count(movie_id)<=ALL(select  count(movie_id)
+FROM customer_issue_details
+group by customer_id) order by customer_name) ;
+
+Please follow instructions given below.
+
+ Write a query to display the customer id , customer name and number of times movies have been issued from Comedy category. Display only for customers who has taken more than once.
+Hint: Use NO_OF_TIMES as alias name 
+Display the records in ascending order based on customer name.
+
+SELECT cid.customer_id,customer_name,count(cid.movie_id) NO_OF_TIMES FROM customer_master cm INNER JOIN customer_issue_details cid ON cm.customer_id=cid.customer_id INNER JOIN movies_master mm
+ON cid.movie_id=mm.movie_id WHERE movie_category='Comedy' GROUP BY customer_name HAVING count(cid.customer_id)>1 order by customer_name;
+
+Please follow instructions given below.
+
+Write a query to display customer id and total rent paid by the customers who are issued with the videos. Need not display the customers who has not taken / issued with any videos. Hint: Alias Name for total rent paid is TOTAL_COST. Display the records sorted in ascending order based on customer id
+
+SELECT cid.customer_id, sum(rental_cost) TOTAL_COST FROM customer_issue_details cid INNER JOIN movies_master mm ON cid.movie_id=mm.movie_id GROUP BY customer_id order by customer_id;
+----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+
